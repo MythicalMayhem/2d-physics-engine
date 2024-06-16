@@ -16,35 +16,6 @@ local debounce = os.clock()
 local dirs = {abs=0, ord=0}
 local p = ''
 
-
-function entities:new()
-    
-    local temp = {}
-    temp.x = 500
-    temp.y = 500
-    temp.h = 20
-    temp.w = 20
-    temp.stats = {speed = 10 }
-    temp.direction = {x=0,y=0}
-    temp.forces = {}
-    temp.sprite = function() molly.graphics.rectangle('fill', temp.x, temp.y, 20,20) end
-    temp.compute = function() 
-        
-        local sumx,sumy = bkt:normalize2d(temp.direction.x,temp.direction.y)
-        local summag = temp.stats.speed
-
-        for i,force in ipairs(temp.forces) do 
-            local x,y = bkt:normalize2d(force.x,force.y)
-            sumx = sumx + x
-            sumy = sumy + y
-            summag = summag + force.mag
-        end  
-        return {x  = sumx, y   = sumy, mag = summag}
-    end
-    table.insert(entities,temp)    
-    return temp
-end
-
 function boxes:new (x,y,w,h)
     local temp = {}
     temp.x = x
@@ -65,6 +36,38 @@ function swings:new(x,y,r)
     return temp
 end
 
+function entities:new()
+    
+    local temp = {}
+    temp.x = 500
+    temp.y = 500
+    temp.h = 20
+    temp.w = 20
+    temp.stats = { speed = 1 }
+    temp.direction = { x = 0 , y = 0 ,mag = temp.stats.speed}
+    temp.impulses = {}
+    temp.linearforces   = {}
+    temp.sprite = function() molly.graphics.rectangle('fill', temp.x, temp.y, 20,20) end
+    temp.compute = function()
+        local sumx,sumy = 0,0
+        local forces = bkt.concattabs(temp.linearforces,{temp.direction},temp.impulses)
+
+        for i,force in ipairs(forces) do 
+            local x,y = bkt:normalize2d(force.x,force.y)
+            sumx = sumx + x*force.mag
+            sumy = sumy + y*force.mag        
+        end   
+        local x,y = bkt:normalize2d(sumx,sumy)
+        local summag = bkt:magnitude(sumx,sumy)
+
+        return {x  =x, y   = y, mag = summag}
+    end
+    table.insert(entities,temp)    
+    return temp
+end
+
+
+
 local player = entities:new() 
 
 function clipY(entity,box)
@@ -78,8 +81,7 @@ function clipX(entity,box)
 end
 
 function collisions(entity)
-    local direction = entity.compute() 
-     
+    local direction = entity.compute()  
     local toX = entity.x + direction.x*direction.mag
     local toY = entity.y + direction.y*direction.mag
     
@@ -92,29 +94,23 @@ function collisions(entity)
         end    
         if (entity.x< box.x + box.w ) and (entity.x+ entity.w > box.x) and (toY < box.y + box.h) and (toY + entity.h > box.y )  then  
             ord =true 
-            feetOn = box
-            
+            feetOn = box            
         end    
     end
 
 
     if feetOn then
-        if abs and (feetOn.h>feetOn.w) then
-            clipX(entity,feetOn)
-        elseif ord and (feetOn.h<feetOn.w) then
-            clipY(entity,feetOn)
-        end
+        if abs and (feetOn.h>feetOn.w) then clipX(entity,feetOn)
+        elseif ord and (feetOn.h<feetOn.w) then clipY(entity,feetOn) end
     end
     if abs==false then player.x = toX end
     if ord==false then player.y = toY end  
 end
 
 function molly.load() 
-
     molly.window.setMode(1600, 900)
     molly.window.setFullscreen(true) 
-    myFont = molly.graphics.newFont(25)
-
+    molly.graphics.setFont(molly.graphics.newFont( 25 ))
     
     local wh = molly.graphics.getHeight()
     local ww = molly.graphics.getWidth()
@@ -123,7 +119,8 @@ function molly.load()
     boxes:new(0,0,ww,10) 
     boxes:new(ww-10,0,10,wh) 
     boxes:new(0,0,10,wh) 
-  --  for i,entity in ipairs(entities) do  table.insert(entity.forces,{x=0,y=-1,mag=-2})  end 
+
+    for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=9.8})  end 
 end
 
 function molly.update(dt) 
@@ -142,7 +139,7 @@ function molly.update(dt)
 end 
 
 function molly.draw()
-    molly.graphics.setFont(myFont)
+    
     molly.graphics.setColor(0.5, 0.9, 0.5)
     player.sprite()
     molly.graphics.setColor(0.7, 0.7, 1)
