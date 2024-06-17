@@ -13,7 +13,7 @@ function bucket:normalize2d(x, y)
 end
 
 function bucket.t2s(tbl)
-    if tbl == {} then return '{}' end
+    if tbl == nil then return '{}' end
     local result = ""
     for k, v in pairs(tbl) do
         if type(k) == "string" then result = result .. "[\"" .. k .. "\"]" .. "=" end

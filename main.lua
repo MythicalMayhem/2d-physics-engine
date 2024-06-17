@@ -1,19 +1,26 @@
 local molly = love
 
 
-
-    
-local bkt = require ("bucket")
+ 
+local bkt = require ("libs/bucket") 
 local boxes  = {}
 local entities = {}
 local swings = {}
-local world = {}
-world.gravity = 9
+local game = {}
+game.gravity = 9.8
+game.resistance = 0.128
+game.vw = 1920
+game.vh = 1080
+
+local coef = 2
+local screenwidth, screenheight = game.vw/coef,game.vh/coef
+
+local sx =  screenwidth / game.vw
+local sy =  screenheight /game.vh
 
 
 local fps = 1
-local debounce = os.clock()
-local dirs = {abs=0, ord=0}
+local debounce = os.clock() 
 local p = ''
 
 function boxes:new (x,y,w,h)
@@ -26,15 +33,7 @@ function boxes:new (x,y,w,h)
     table.insert(boxes,temp)    
     return temp
 end
-
-function swings:new(x,y,r)
-    local temp = {}
-    temp.x = x
-    temp.y = y
-    temp.r = r
-    temp.sprite = function() molly.graphics.circle('fill', temp.x, temp.y, temp.r) end
-    return temp
-end
+ 
 
 function entities:new()
     
@@ -42,12 +41,13 @@ function entities:new()
     temp.x = 500
     temp.y = 500
     temp.h = 20
-    temp.w = 20
+    temp.w = 10
+    temp.mass = 55
     temp.stats = { speed = 5 }
     temp.direction = { x = 0 , y = 0 ,mag = temp.stats.speed}
     temp.impulses = {}
     temp.linearforces   = {}
-    temp.sprite = function() molly.graphics.rectangle('fill', temp.x, temp.y, 20,20) end
+    temp.sprite = function() molly.graphics.rectangle('fill', temp.x, temp.y, temp.w,temp.h) end
     temp.compute = function()
         local sumx,sumy = 0,0
         local forces = bkt.concattabs(temp.linearforces,{temp.direction},temp.impulses)
@@ -68,16 +68,15 @@ end
 
 
 
-local player = entities:new() 
-
+local player = entities:new()   
 function clipY(entity,box)
-    if box.y > entity.y then   entity.y = box.y - (entity.h)   p = 'down'
-    else  entity.y = box.y + (box.h) p = 'up'  end    
+    if box.y > entity.y then   entity.y = box.y - (entity.h)    
+    else  entity.y = box.y + (box.h)  end    
 end
 
 function clipX(entity,box)
-    if box.x > entity.x then  entity.x = box.x -  (entity.w)            p ='right'
-    else entity.x = box.x + (box.w) p ='left' end
+    if box.x > entity.x then  entity.x = box.x -  (entity.w)             
+    else entity.x = box.x + (box.w)   end
 end
 
 function collisions(entity)
@@ -109,12 +108,14 @@ function collisions(entity)
 end
 
 function molly.load() 
-    molly.window.setMode(1600, 900)
-    molly.window.setFullscreen(true) 
+    molly.window.setMode(screenwidth, screenheight)
+    molly.window.setFullscreen(false) 
     molly.graphics.setFont(molly.graphics.newFont( 25 ))
     
-    local wh = molly.graphics.getHeight()
-    local ww = molly.graphics.getWidth()
+    local wh = game.vh
+    local ww = game.vw
+
+
  
     boxes:new(0,wh-10,ww,10) 
     boxes:new(0,0,ww,10) 
@@ -124,11 +125,21 @@ function molly.load()
     boxes:new(400,500,100,200) 
 
 
-    --for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=9.8})  end 
+    for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=game.gravity})  end 
 end
 
 function molly.update(dt) 
     if os.time() - debounce > 0.05 then fps = 1 / dt debounce = os.time() end
+     
+    local i = 0
+    while player.impulses and  (i < #player.impulses) do 
+        i = i + 1
+
+        local mag = player.impulses[i].mag - player.impulses[i].resistance 
+        if mag < 0 then table.remove(player.impulses,i)
+        else player.impulses[i].mag = mag  end           
+    end 
+ 
 
     if molly.keyboard.isDown('w','up') then player.direction.y = -1
     elseif molly.keyboard.isDown('s','down') then player.direction.y  = 1
@@ -138,27 +149,43 @@ function molly.update(dt)
     elseif molly.keyboard.isDown('d','right') then player.direction.x =  1
     else player.direction.x = 0  end 
     
-    collisions(player)
-    
+
+    collisions(player)  
 end 
 
-function molly.draw()
+function molly.draw() 
+ 
+    local x,y = math.floor(player.x) ,math.floor(player.y)
+
+    molly.graphics.push() 
+
+    local zoom = 4
+    molly.graphics.scale(sx*zoom, sy*zoom)  
+
+	molly.graphics.translate(screenwidth/zoom-player.x, screenheight/zoom-player.y)
+    
+
+     
     
     molly.graphics.setColor(0.5, 0.9, 0.5)
     player.sprite()
+    
     molly.graphics.setColor(0.7, 0.7, 1)
     for i, box in ipairs(boxes) do box.sprite() end
+    
     molly.graphics.setColor(0.5, 0.9, 0.5)
     molly.graphics.print('\n'..p)
-    molly.graphics.print(tostring(fps)..'\n')
+    molly.graphics.print(tostring(fps)..'\n')  
+    molly.graphics.pop()
+--    local x,y = math.floor(player.x) ,math.floor(player.y)
+    --   molly.graphics.clear()
+    
 end
 
-function molly.mousepressed()
-    local x, y = molly.mouse.getPosition()
-    local least = nil
-    for i,swing in ipairs(swings) do
-        local curr = math.sqrt(x*least.x + y*least.y)
-        local dist = math.sqrt(x*swing.x + y*swing.y)
-        if dist < curr then least = swing end
+function molly.keypressed(key)
+    if key=='space' then
+        local  a = {x=0,y=-1,mag=15,resistance = game.resistance }
+        table.insert(player.impulses,a)  
     end
 end
+ 
