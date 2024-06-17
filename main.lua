@@ -43,7 +43,7 @@ function entities:new()
     temp.y = 500
     temp.h = 20
     temp.w = 20
-    temp.stats = { speed = 1 }
+    temp.stats = { speed = 5 }
     temp.direction = { x = 0 , y = 0 ,mag = temp.stats.speed}
     temp.impulses = {}
     temp.linearforces   = {}
@@ -71,13 +71,13 @@ end
 local player = entities:new() 
 
 function clipY(entity,box)
-    if box.y > entity.y then  entity.y = box.y - (box.h/2) - (entity.h)   
-    else  entity.y = box.y + (box.h/2) + (entity.h/2)    end    
+    if box.y > entity.y then   entity.y = box.y - (entity.h)   p = 'down'
+    else  entity.y = box.y + (box.h) p = 'up'  end    
 end
 
 function clipX(entity,box)
-    if box.x > entity.x then entity.x = box.x - (box.w/2) - (entity.w)  
-    else entity.x = box.x + (box.w/2) + (entity.w/2) end
+    if box.x > entity.x then  entity.x = box.x -  (entity.w)            p ='right'
+    else entity.x = box.x + (box.w) p ='left' end
 end
 
 function collisions(entity)
@@ -88,6 +88,7 @@ function collisions(entity)
     local abs,ord = false,false
     local feetOn = nil
     for i, box in ipairs(boxes) do
+
         if (toX< box.x + box.w ) and (toX+ entity.w > box.x) and (entity.y < box.y + box.h) and (entity.y + entity.h > box.y )  then  
             abs =true  
             feetOn = box
@@ -99,9 +100,9 @@ function collisions(entity)
     end
 
 
-    if feetOn then
-        if abs and (feetOn.h>feetOn.w) then clipX(entity,feetOn)
-        elseif ord and (feetOn.h<feetOn.w) then clipY(entity,feetOn) end
+    if feetOn then 
+        if abs   then clipX(entity,feetOn)
+        elseif ord   then clipY(entity,feetOn) end
     end
     if abs==false then player.x = toX end
     if ord==false then player.y = toY end  
@@ -119,8 +120,11 @@ function molly.load()
     boxes:new(0,0,ww,10) 
     boxes:new(ww-10,0,10,wh) 
     boxes:new(0,0,10,wh) 
+    
+    boxes:new(400,500,100,200) 
 
-    for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=9.8})  end 
+
+    --for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=9.8})  end 
 end
 
 function molly.update(dt) 
