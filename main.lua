@@ -2,21 +2,15 @@ local molly = love
 
 
  
+local game = require ('config')
 local bkt = require ("libs/bucket") 
+local cam = require ("libs/cam")
+
 local boxes  = {}
 local entities = {}
 local swings = {}
-local game = {}
-game.gravity = 9.8
-game.resistance = 0.128
-game.vw = 1920
-game.vh = 1080
-
-local coef = 2
-local screenwidth, screenheight = game.vw/coef,game.vh/coef
-
-local sx =  screenwidth / game.vw
-local sy =  screenheight /game.vh
+ 
+ 
 
 
 local fps = 1
@@ -68,7 +62,7 @@ end
 
 
 
-local player = entities:new()   
+
 function clipY(entity,box)
     if box.y > entity.y then   entity.y = box.y - (entity.h)    
     else  entity.y = box.y + (box.h)  end    
@@ -103,12 +97,12 @@ function collisions(entity)
         if abs   then clipX(entity,feetOn)
         elseif ord   then clipY(entity,feetOn) end
     end
-    if abs==false then player.x = toX end
-    if ord==false then player.y = toY end  
+    if abs==false then entity.x = toX end
+    if ord==false then entity.y = toY end  
 end
 
 function molly.load() 
-    molly.window.setMode(screenwidth, screenheight)
+    molly.window.setMode(game.screenwidth, game.screenheight)
     molly.window.setFullscreen(false) 
     molly.graphics.setFont(molly.graphics.newFont( 25 ))
     
@@ -128,16 +122,21 @@ function molly.load()
     for i,entity in ipairs(entities) do  table.insert(entity.linearforces,{x=0,y=1,mag=game.gravity})  end 
 end
 
+
+local player = entities:new()   
+local camera = cam()
 function molly.update(dt) 
     if os.time() - debounce > 0.05 then fps = 1 / dt debounce = os.time() end
-     
-    local i = 0
-    while player.impulses and  (i < #player.impulses) do 
-        i = i + 1
-
-        local mag = player.impulses[i].mag - player.impulses[i].resistance 
-        if mag < 0 then table.remove(player.impulses,i)
-        else player.impulses[i].mag = mag  end           
+    
+    for ind, entity in ipairs(entities) do
+        
+        local i = 0
+        while entity.impulses and  (i < #entity.impulses) do 
+            i = i + 1
+            local mag = entity.impulses[i].mag - entity.impulses[i].resistance 
+            if mag < 0 then table.remove(entity.impulses,i)
+            else entity.impulses[i].mag = mag  end           
+        end
     end 
  
 
@@ -154,32 +153,19 @@ function molly.update(dt)
 end 
 
 function molly.draw() 
- 
-    local x,y = math.floor(player.x) ,math.floor(player.y)
-
-    molly.graphics.push() 
-
-    local zoom = 4
-    molly.graphics.scale(sx*zoom, sy*zoom)  
-
-	molly.graphics.translate(screenwidth/zoom-player.x, screenheight/zoom-player.y)
-    
-
-     
-    
+    camera:attach(player.x, player.y)
     molly.graphics.setColor(0.5, 0.9, 0.5)
     player.sprite()
     
     molly.graphics.setColor(0.7, 0.7, 1)
     for i, box in ipairs(boxes) do box.sprite() end
     
+    camera:detach()
+
     molly.graphics.setColor(0.5, 0.9, 0.5)
     molly.graphics.print('\n'..p)
     molly.graphics.print(tostring(fps)..'\n')  
-    molly.graphics.pop()
---    local x,y = math.floor(player.x) ,math.floor(player.y)
-    --   molly.graphics.clear()
-    
+ 
 end
 
 function molly.keypressed(key)
