@@ -12,6 +12,7 @@ function entities:new()
     temp.y = 500
     temp.h = 20
     temp.w = 10
+    temp.state = 'hang'
     temp.mass = 55
     temp.stats = { speed = 5 }
     temp.direction = { x = 0 , y = 0 ,mag = temp.stats.speed}

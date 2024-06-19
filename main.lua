@@ -1,9 +1,13 @@
 local molly = love
+local bkt = require ('libs/bucket') 
 local game = require ('config') 
+
 local cam = require ("libs/cam")
 local physics = require ("physics/wrapper")
+
 local entities =    require ("objects/entity") 
 local boxes = require ("objects/box")
+local hangs = require ("objects/hangs")
  
 local fps = 1
 local debounce = os.clock() 
@@ -23,7 +27,11 @@ function molly.load()
     boxes:newCollider(0,0,10,wh)  
     boxes:newCollider(500,900,300,50) 
     
-    N = boxes:newArea(750,850,50,50) 
+    
+
+    N = boxes:newArea(nil,750,850,50,50) 
+    M = hangs:new(N,1000,600,25) 
+    N.poi = M
 
     for i,entity in ipairs(entities.pool) do  table.insert(entity.linearforces,{x=0,y=1,mag=game.gravity})  end 
 
@@ -54,7 +62,9 @@ function molly.update(dt)
     elseif molly.keyboard.isDown('d','right') then player.direction.x =  1
     else player.direction.x = 0  end 
     physics:step(player,boxes.colliders)
-    p = tostring(physics:isInside(player,N))
+    --p =   physics:isInside(player,N) 
+
+
 end 
 
 function molly.draw() 
@@ -68,19 +78,30 @@ function molly.draw()
     
     molly.graphics.setColor(0.2, 0.5, 0.5,0.5)
     for i, area in ipairs(boxes.areas) do area.sprite() end
+    
+    molly.graphics.setColor(1, 0.5, 0.5)
+    for i, hang in ipairs(hangs.hangs) do hang.sprite() end
 
     camera:detach()
 
     molly.graphics.setColor(0.5, 0.9, 0.5)
-    molly.graphics.print('\n'..p)
+    molly.graphics.print('\n'..tostring(p))
     molly.graphics.print(tostring(fps)..'\n')
  
-end
 
+
+
+end
+  
 function molly.keypressed(key)
     if key=='space' then
         local  a = {x=0,y=-1,mag=15,resistance = game.resistance }
         table.insert(player.impulses,a)
+    end
+    if key =='f' then
+        if physics:isInside(player,N)  then
+             p = 'ok'
+        end
     end
 end
  
