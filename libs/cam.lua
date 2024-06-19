@@ -11,7 +11,7 @@ local init =  function (vw,vh)
         x = 0,
         y = 0,
         rot = 0,
-        zoom = 5,        
+        zoom = 1,        
         _sx = 0,
         _sy = 0,
         _sw = 0,
@@ -25,8 +25,8 @@ function camera:attach(x, y)
     molly.graphics.push()  
     molly.graphics.scale((game.screenwidth / game.vw)*self.zoom, (game.screenheight / game.vh)*self.zoom)   
     molly.graphics.translate(-x + game.vw/(2*self.zoom)   , -y + game.vh/(2*self.zoom))
-    
 end
+
 function camera:detach()
     molly.graphics.pop()
     molly.graphics.setScissor(self._sx,self._sy,self._sw,self._sh)
