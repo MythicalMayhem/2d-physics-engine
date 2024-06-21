@@ -12,7 +12,7 @@ local function clipX(entity,box)
     else entity.x = box.x + (box.w)   end
 end
 
-function funcs:step(entity,boxes)
+function funcs:collisionStep(entity,boxes)
     local direction = entity.compute()  
     local toX = entity.x + direction.x*direction.mag
     local toY = entity.y + direction.y*direction.mag 

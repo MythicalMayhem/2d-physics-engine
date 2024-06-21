@@ -1,10 +1,9 @@
-local game = require ("config")
+local game = require ("main/config")
 local camera = {}
 local molly = love
 camera.__index = camera 
 
 local init =  function (vw,vh)
-    
     return setmetatable({
         vw = vw,
         vh = vh,
@@ -19,7 +18,13 @@ local init =  function (vw,vh)
     } , camera)
 end
 
-function camera:attach(x, y)
+function camera:lookAt(x,y)
+    self.x = x
+    self.y = y
+end
+
+function camera:attach( )
+    local x,y = self.x  or 0 ,self.y or 0 
     self._sx,self._sy,self._sw,self._sh = molly.graphics.getScissor() 
     molly.graphics.setScissor(0,0,game.screenwidth,game.screenheight)
     molly.graphics.push()  
