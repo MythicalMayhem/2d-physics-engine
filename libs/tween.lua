@@ -26,7 +26,7 @@ function tws:new(e,from,to,seconds)
     function temp:play()    e.x = from.x e.y = from.y temp.state = 1 task:run(temp.id)   end
     function temp:pause()   task:pause(temp.id) end
     function temp:resume()  task:run(temp.id)   end
-    function temp:destroy() task:stop(temp.id) temp=nil end
+    function temp:destroy() task:kill(temp.id) temp=nil end
  
     return temp
 end

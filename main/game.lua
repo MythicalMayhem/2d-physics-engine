@@ -21,8 +21,6 @@ function molly.load()
     molly.window.setFullscreen(false)
     molly.graphics.setFont(molly.graphics.newFont(25))
 
-   
-
     local forcestId = task:append(function() physics:forceStep() end)
     task:run(forcestId) 
 
@@ -42,7 +40,7 @@ function molly.update(dt)
     elseif molly.keyboard.isDown('d', 'right') then molly.player.direction.x = 1
     else molly.player.direction.x = 0 end
     physics:collisionStep(molly.player, boxes.colliders)
-    molly.camera:lookAt(molly.player.x, molly.player.y)
+     
 end
 
 
@@ -61,11 +59,6 @@ function molly.draw()
 
 end
 
-function molly.keypressed(key)
-
-end
-
- 
 
 return molly
 

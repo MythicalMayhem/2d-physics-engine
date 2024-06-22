@@ -23,8 +23,14 @@ function camera:lookAt(x,y)
     self.y = y
 end
 
-function camera:attach( )
+function camera:lock(e)   self.locked = e end
+function camera:unlock() self.locked = nil end
+
+function camera:attach()
+
     local x,y = self.x  or 0 ,self.y or 0 
+    if self.locked then x = self.locked.x y = self.locked.y end
+
     self._sx,self._sy,self._sw,self._sh = molly.graphics.getScissor() 
     molly.graphics.setScissor(0,0,game.screenwidth,game.screenheight)
     molly.graphics.push()  
@@ -34,8 +40,7 @@ end
 
 function camera:detach()
     molly.graphics.pop()
-    molly.graphics.setScissor(self._sx,self._sy,self._sw,self._sh)
-    
+    molly.graphics.setScissor(self._sx,self._sy,self._sw,self._sh) 
 end
 
 return setmetatable(camera, {__call = function(_,a,b) return init(a,b) end})
