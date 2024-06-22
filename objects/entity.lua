@@ -7,7 +7,7 @@ local entities = {}
 entities.pool = {}
 
 
-function entities:new(canCollide,x,y,w,h,c) 
+function entities:new(x,y,w,h,c) 
     local temp = {}
     temp.x = x or 500
     temp.y = y or 500
