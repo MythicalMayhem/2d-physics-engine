@@ -1,4 +1,4 @@
-# 2d lua game engine 
+# 2d lua physics engine 
 this project is built on LOVE 2d game engine,
 mainly just to hone skills but it is suitable for use 
 
@@ -15,7 +15,7 @@ Install my-project with npm
 ```
 - clone repo
 ```bash
-    git clone https://github.com/MythicalMayhem/gameNgine
+    git clone https://github.com/MythicalMayhem/physicsNgine
 ```
 - install lua and make environment 
 - install love 2d ([how to install](https://love2d.org/wiki/Getting_Started))
